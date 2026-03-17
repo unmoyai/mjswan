@@ -142,6 +142,12 @@ export class PolicyRunner {
     return first ? this.obsLayouts[first].map((entry) => ({ ...entry })) : [];
   }
 
+  getAllObsLayouts(): Record<string, { name: string; size: number }[]> {
+    return Object.fromEntries(
+      Object.entries(this.obsLayouts).map(([k, v]) => [k, v.map((e) => ({ ...e }))])
+    );
+  }
+
   getPolicyModuleContext(): Record<string, unknown> {
     return this.policyModule?.getContext() ?? {};
   }

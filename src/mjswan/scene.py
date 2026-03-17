@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 import mujoco
 import onnx
 
+from .mdp.observations import ObsTerm
 from .policy import PolicyConfig, PolicyHandle
 from .splat import SplatConfig, SplatHandle
 
@@ -74,6 +75,7 @@ class SceneHandle:
         metadata: dict[str, Any] | None = None,
         source_path: str | None = None,
         config_path: str | None = None,
+        observations: list[ObsTerm] | None = None,
     ) -> PolicyHandle:
         """Add an ONNX policy to this scene.
 
@@ -83,15 +85,26 @@ class SceneHandle:
             metadata: Optional metadata dictionary for the policy.
             source_path: Optional source path for the policy ONNX file.
             config_path: Optional source path for the policy config JSON file.
+            observations: mjlab-style observation terms. When provided, the
+                build step emits them as obs_config.policy[] in the policy
+                JSON, overriding any obs_config embedded in config_path.
 
         Returns:
             PolicyHandle for configuring the policy (adding commands, etc.)
 
         Example:
+            from mjswan.mdp import observations as Obs
+
             policy = scene.add_policy(
                 policy=onnx.load("locomotion.onnx"),
                 name="Locomotion",
-                config_path="locomotion.json",
+                observations=[
+                    Obs.projected_gravity(history_steps=3),
+                    Obs.joint_pos(subtract_default=True, scale=0.5),
+                    Obs.joint_vel(scale=0.05),
+                    Obs.prev_actions(history_steps=4),
+                    Obs.velocity_command(),
+                ],
             )
             policy.add_velocity_command()
         """
@@ -104,6 +117,7 @@ class SceneHandle:
             metadata=metadata,
             source_path=source_path,
             config_path=config_path,
+            observations=observations,
         )
         self._config.policies.append(policy_config)
         return PolicyHandle(policy_config, self)

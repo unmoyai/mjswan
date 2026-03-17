@@ -18,6 +18,7 @@ import {
   VelocityCommandWithOscillatorsObservation,
   GeneratedCommandsObservation,
 } from './CommandObservation';
+import { MdpObservations } from '../mdp/observations';
 
 function getTrackingContext(runner: PolicyRunner): TrackingHelper | null {
   const context = runner.getPolicyModuleContext();
@@ -685,6 +686,8 @@ export const Observations = {
   PreviousActions,
   BootIndicator,
   RootAngVelB,
+  // mjlab MDP functions (snake_case names match mjlab function names exactly)
+  ...MdpObservations,
   ProjectedGravityB,
   ProjectedGravity,
   JointPos,

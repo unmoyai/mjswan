@@ -201,15 +201,16 @@ class Builder:
                                 (
                                     {
                                         "name": policy.name,
-                                        **(
-                                            {
-                                                "config": f"{name2id(scene.name)}/"
-                                                f"{name2id(policy.name)}.json"
-                                            }
-                                            if getattr(policy, "config_path", None)
-                                            or getattr(policy, "commands", None)
-                                            else {}
-                                        ),
+                        **(
+                                {
+                                    "config": f"{name2id(scene.name)}/"
+                                    f"{name2id(policy.name)}.json"
+                                }
+                                if getattr(policy, "config_path", None)
+                                or getattr(policy, "commands", None)
+                                or getattr(policy, "observations", None)
+                                else {}
+                            ),
                                         **(
                                             {"source": policy.source_path}
                                             if getattr(policy, "source_path", None)
@@ -432,12 +433,19 @@ class Builder:
                                     data.setdefault("onnx", {})
                                     if isinstance(data["onnx"], dict):
                                         data["onnx"]["path"] = policy_path.name
-                                    # Serialize commands if any are defined
                                     if policy.commands:
                                         data["commands"] = {
                                             name: cmd.to_dict()
                                             for name, cmd in policy.commands.items()
                                         }
+                                    if policy.observations is not None:
+                                        # When config_path provides the ONNX obs (policy group),
+                                        # add Python-defined observations as a separate "monitor"
+                                        # group so they don't conflict with the model's input dims.
+                                        data.setdefault("obs_config", {})
+                                        data["obs_config"]["monitor"] = [
+                                            o.to_dict() for o in policy.observations
+                                        ]
                                     with open(target, "w") as f:
                                         json.dump(data, f, indent=2)
                                 except Exception:
@@ -448,16 +456,18 @@ class Builder:
                                     category=RuntimeWarning,
                                     stacklevel=2,
                                 )
-                        elif policy.commands:
-                            # No config_path but commands defined - create config with commands only
+                        elif policy.commands or policy.observations:
                             target = policy_path.with_suffix(".json")
-                            data = {
-                                "onnx": {"path": policy_path.name},
-                                "commands": {
+                            data: dict = {"onnx": {"path": policy_path.name}}
+                            if policy.commands:
+                                data["commands"] = {
                                     name: cmd.to_dict()
                                     for name, cmd in policy.commands.items()
-                                },
-                            }
+                                }
+                            if policy.observations is not None:
+                                data["obs_config"] = {
+                                    "policy": [o.to_dict() for o in policy.observations]
+                                }
                             with open(target, "w") as f:
                                 json.dump(data, f, indent=2)
 

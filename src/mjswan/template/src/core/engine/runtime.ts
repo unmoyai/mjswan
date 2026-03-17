@@ -89,6 +89,8 @@ export class mjswanRuntime {
   private vrButton: HTMLElement | null;
   private splatMesh: SplatMesh | null;
   private colliderMesh: THREE.Group | null;
+  private lastObservations: Record<string, Float32Array>;
+  private lastObsLayouts: Record<string, { name: string; size: number }[]>;
 
   constructor(mujoco: MainModule, container: HTMLElement, options: RuntimeOptions = {}) {
     this.mujoco = mujoco;
@@ -186,6 +188,8 @@ export class mjswanRuntime {
     this.onnxInferencing = false;
     this.splatMesh = null;
     this.colliderMesh = null;
+    this.lastObservations = {};
+    this.lastObsLayouts = {};
 
     // Initialize cache system (singleton shared across runtime instances)
     this.sceneCacheManager = SceneCacheManager.getInstance(this.mujoco);
@@ -407,6 +411,8 @@ export class mjswanRuntime {
         if (this.policyRunner && this.policyStateBuilder) {
           const state = this.policyStateBuilder.build();
           const obs = this.policyRunner.collectObservationsByKey(state);
+          this.lastObservations = obs;
+          this.lastObsLayouts = this.policyRunner.getAllObsLayouts();
           await this.runOnnxInference(obs);
           if (this.policyDebugCounter % 60 === 0) {
             const debugKey =
@@ -889,6 +895,14 @@ export class mjswanRuntime {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
   };
+
+  getLastObservations(): Record<string, Float32Array> {
+    return this.lastObservations;
+  }
+
+  getObsLayouts(): Record<string, { name: string; size: number }[]> {
+    return this.lastObsLayouts;
+  }
 
   dispose(): void {
     this.stop();

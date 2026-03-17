@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 import onnx
 
 from .command import CommandGroupConfig, CommandInput, velocity_command
+from .mdp.observations import ObsTerm
 
 if TYPE_CHECKING:
     from .scene import SceneHandle
@@ -38,6 +39,13 @@ class PolicyConfig:
 
     commands: dict[str, CommandGroupConfig] = field(default_factory=dict)
     """Command groups for user-controlled inputs."""
+
+    observations: list[ObsTerm] | None = None
+    """mjlab-style observation terms for the policy group.
+
+    When set, emitted as obs_config.policy[] in the policy JSON.
+    Names must match entries in the JS Observations registry.
+    """
 
 
 class PolicyHandle:

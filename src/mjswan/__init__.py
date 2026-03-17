@@ -5,6 +5,7 @@ Interactive MuJoCo simulations with ONNX policies running entirely in the browse
 
 __version__ = "0.2.0"
 
+from . import mdp
 from .app import mjswanApp
 from .builder import Builder
 from .command import (
@@ -22,6 +23,8 @@ from .scene import SceneConfig, SceneHandle
 from .splat import SplatConfig, SplatHandle
 
 __all__ = [
+    # MDP component config
+    "mdp",
     # Builder and App
     "Builder",
     "mjswanApp",

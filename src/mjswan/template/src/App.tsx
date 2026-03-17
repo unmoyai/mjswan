@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MantineProvider } from '@mantine/core';
 import MjswanViewer from './components/MjswanViewer';
 import ControlPanel from './ControlPanel';
+import ObservationPanel from './ControlPanel/ObservationPanel';
 import type { mjswanRuntime } from './core/engine/runtime';
 import type { SplatConfig } from './core/scene/splat';
 import { theme } from './AppTheme';
@@ -485,6 +486,7 @@ function AppContent() {
           onReady={handleViewerReady}
           onRuntimeReady={handleRuntimeReady}
         />
+        <ObservationPanel runtimeRef={runtimeRef} />
       </div>
     </MantineProvider>
   );
